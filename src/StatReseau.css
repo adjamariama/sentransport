@@ -1,0 +1,9 @@
+.stat-reseau {
+  display: flex;
+  justify-content: space-around;
+  padding: 15px;
+  background: #2c3e50;
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
