@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Header from './Header';
 import ListeLignes from './ListeLignes';
@@ -5,25 +6,100 @@ import Footer from './Footer';
 import StatReseau from './StatReseau';
 
 function App() {
-  const lignes = [
-    { id: 1, numero: "1", depart: "Parcelles", arrivee: "Plateau", arrets: 14, couleur: "#e74c3c" },
-    { id: 2, numero: "7", depart: "Guediawaye", arrivee: "Place Obé", arrets: 18, couleur: "#3498db" },
-    { id: 3, numero: "15", depart: "Pikine", arrivee: "Medina", arrets: 12, couleur: "#f1c40f" },
-    { id: 4, numero: "23", depart: "Ouakam", arrivee: "Grand Dakar", arrets: 10, couleur: "#9b59b6" },
-    { id: 5, numero: "8", depart: "Almadies", arrivee: "Colobane", arrets: 16, couleur: "#1abc9c" },
-    { id: 6, numero: "12", depart: "Yoff", arrivee: "Sandaga", arrets: 11, couleur: "#e67e22" },
-    { id: 7, numero: "30", depart: "Fann", arrivee: "Liberté", arrets: 9, couleur: "#7f8c8d" },
-    { id: 8, numero: "44", depart: "Médina", arrivee: "HLM", arrets: 7, couleur: "#c0392b" },
-    { id: 9, numero: "5", depart: "Dieuppeul", arrivee: "Sicap", arrets: 13, couleur: "#2980b9" },
-    { id: 10, numero: "19", depart: "Ouakam", arrivee: "Fann", arrets: 15, couleur: "#27ae60" }
-  ];
+  // 1. Les variables d'état (State)
+  const [lignes, setLignes] = useState([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(null);
+  const [recherche, setRecherche] = useState("");
+  const [ligneSelectionnee, setLigneSelectionnee] = useState(null);
+
+  // 2. Charger les données au démarrage (Lab 5)
+  useEffect(() => {
+    fetch("http://localhost:5000/lignes")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Erreur serveur : " + response.status);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setLignes(data);
+        setChargement(false);
+      })
+      .catch((error) => {
+        setErreur(error.message);
+        setChargement(false);
+      });
+  }, []);
+
+  // ==========================================
+  // Étape 4 : Gestion des écrans de chargement et d'erreur
+  // ==========================================
+
+  // Écran de chargement
+  if (chargement) {
+    return (
+      <div className="App">
+        <Header />
+        <main className="contenu">
+          <p className="message-chargement">
+            Chargement des lignes ...
+          </p>
+        </main>
+      </div>
+    );
+  }
+
+  // Écran d'erreur
+  if (erreur) {
+    return (
+      <div className="App">
+        <Header />
+        <main className="contenu">
+          <div className="message-erreur">
+            <p> Impossible de charger les lignes . </p>
+            <p className="erreur-detail">{erreur}</p>
+            <p> Vérifiez que le serveur Flask est lancé (python api/app.py) . </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Écran normal : Filtrage dynamique des lignes selon la recherche
+  const lignesFiltrees = lignes.filter(ligne => 
+    ligne.depart.toLowerCase().includes(recherche.toLowerCase()) ||
+    ligne.arrivee.toLowerCase().includes(recherche.toLowerCase()) ||
+    ligne.numero.toString().includes(recherche)
+  );
 
   return (
     <div className="App">
       <Header />
       <main className="contenu">
-        <StatReseau lignes={lignes} />
-        <ListeLignes lignes={lignes} />
+        
+        {/* Barre de recherche activée et connectée à l'état */}
+        <div style={{ marginBottom: '20px' }}>
+          <input 
+            type="text" 
+            placeholder="🔍 Rechercher une ligne (ex: Parcelles, Yoff, 7...)" 
+            value={recherche} 
+            onChange={(e) => setRecherche(e.target.value)} 
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              fontSize: '1rem',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              boxSizing: 'border-box'
+            }}
+            className="barre-recherche"
+          />
+        </div>
+
+        {/* On passe les lignes filtrées pour que l'affichage se mette à jour */}
+        <StatReseau lignes={lignesFiltrees} />
+        <ListeLignes lignes={lignesFiltrees} />
       </main>
       <Footer />
     </div>
