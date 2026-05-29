@@ -6,9 +6,13 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Charger les donnees depuis le fichier JSON
-with open("lignes_ddd.json", "r") as f:
+# Charger les données des lignes depuis le fichier JSON
+with open("api/lignes_ddd.json", "r", encoding="utf-8") as f:
     lignes = json.load(f)
+
+# Charger les données des arrêts géolocalisés (Lab 5 - Étape 3)
+with open("api/arrets.json", "r", encoding="utf-8") as f:
+    arrets = json.load(f)
 
 @app.route("/")
 def accueil():
@@ -23,10 +27,12 @@ def accueil():
         ]
     })
 
+# Récupérer toutes les lignes de bus
 @app.route("/lignes")
 def get_lignes():
     return jsonify(lignes)
 
+# Récupérer une ligne spécifique par son ID
 @app.route("/lignes/<int:ligne_id>")
 def get_ligne(ligne_id):
     ligne = next(
@@ -41,19 +47,13 @@ def get_ligne(ligne_id):
 
 
 # =====================================================================
-# CORRECTION DES EXERCICES AJOUTÉE ICI
+# ENDPOINTS ADAPTÉS ET EXERCICES
 # =====================================================================
 
-# Exercice 1 : Liste de tous les arrêts sans doublons
+# Nouvelle version Lab 5 : Liste complète des arrêts avec coordonnées pour Leaflet
 @app.route("/arrets")
 def get_arrets():
-    ensemble_arrets = set()
-    for ligne in lignes:
-        for arret in ligne["listeArrets"]:
-            ensemble_arrets.add(arret)
-            
-    # Conversion du set en liste pour le format JSON
-    return jsonify(list(ensemble_arrets))
+    return jsonify(arrets)
 
 
 # Exercice 2 : Statistiques de l'application

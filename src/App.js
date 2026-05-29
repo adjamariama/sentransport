@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Header from './Header';
 import ListeLignes from './ListeLignes';
-import Footer from './Footer';
 import StatReseau from './StatReseau';
+import Footer from './Footer';
+// CORRECTION : On importe 'carte.js' avec son vrai nom en minuscule sur le disque
+import Carte from './carte'; 
 
 function App() {
   // 1. Les variables d'état (State)
@@ -11,9 +13,8 @@ function App() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState("");
-  const [ligneSelectionnee, setLigneSelectionnee] = useState(null);
 
-  // 2. Charger les données au démarrage (Lab 5)
+  // 2. Charger les données au démarrage depuis l'API Flask
   useEffect(() => {
     fetch("http://localhost:5000/lignes")
       .then((response) => {
@@ -32,8 +33,15 @@ function App() {
       });
   }, []);
 
+  // 3. Filtrage dynamique des lignes pour la barre de recherche
+  const lignesFiltrees = lignes.filter((l) =>
+    l.depart.toLowerCase().includes(recherche.toLowerCase()) ||
+    l.arrivee.toLowerCase().includes(recherche.toLowerCase()) ||
+    l.numero.toString().includes(recherche)
+  );
+
   // ==========================================
-  // Étape 4 : Gestion des écrans de chargement et d'erreur
+  // Écrans de chargement et d'erreur
   // ==========================================
 
   // Écran de chargement
@@ -66,19 +74,15 @@ function App() {
     );
   }
 
-  // Écran normal : Filtrage dynamique des lignes selon la recherche
-  const lignesFiltrees = lignes.filter(ligne => 
-    ligne.depart.toLowerCase().includes(recherche.toLowerCase()) ||
-    ligne.arrivee.toLowerCase().includes(recherche.toLowerCase()) ||
-    ligne.numero.toString().includes(recherche)
-  );
-
+  // ==========================================
+  // Écran principal (Affichage Normal)
+  // ==========================================
   return (
     <div className="App">
       <Header />
       <main className="contenu">
         
-        {/* Barre de recherche activée et connectée à l'état */}
+        {/* CORRECTION : Barre de recherche intégrée directement (pas besoin de fichier Recherche.js) */}
         <div style={{ marginBottom: '20px' }}>
           <input 
             type="text" 
@@ -97,9 +101,18 @@ function App() {
           />
         </div>
 
-        {/* On passe les lignes filtrées pour que l'affichage se mette à jour */}
+        {/* Message dynamique des résultats */}
+        <p className="resultat-recherche" style={{ color: '#7f8c8d', marginBottom: '15px' }}>
+          {lignesFiltrees.length} ligne{lignesFiltrees.length > 1 ? 's' : ''} trouvée{lignesFiltrees.length > 1 ? 's' : ''}
+        </p>
+
+        {/* On affiche tes statistiques et ta liste de lignes */}
         <StatReseau lignes={lignesFiltrees} />
         <ListeLignes lignes={lignesFiltrees} />
+
+        {/* Affichage de la carte Leaflet */}
+        <Carte />
+
       </main>
       <Footer />
     </div>
